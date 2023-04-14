@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from "react";
-import {AddPicture} from "./components/AddPicture";
-import {Picture} from "./components/Home";
+import { AddPicture } from "./components/AddPicture";
+import { Picture } from "./components/Home";
+import { io } from "socket.io-client";
 
 export default function App() {
     const [photos, setPhotos] = useState([]);
 
-    const api = "https://jsonplaceholder.typicode.com/photos/"
+    const api = "http://localhost:3001/photos";
+    const socket = io("http://localhost:3001");
 
     useEffect(() => {
         fetchData();
+        setupSocketListeners();
+
+        return () => {
+            socket.disconnect();
+        };
     }, []);
 
     const fetchData = async () => {
@@ -16,6 +23,26 @@ export default function App() {
             .then((response) => response.json())
             .then((data) => setPhotos(data))
             .catch((error) => console.log(error));
+    };
+
+    const setupSocketListeners = () => {
+        socket.on("photoAdded", (newPhoto) => {
+            setPhotos((photos) => [...photos, newPhoto]);
+        });
+
+        socket.on("photoUpdated", (updatedPhoto) => {
+            const updatedPhotos = photos.map((photo) => {
+                if (photo.id === updatedPhoto.id) {
+                    return updatedPhoto;
+                }
+                return photo;
+            });
+            setPhotos(updatedPhotos);
+        });
+
+        socket.on("photoDeleted", (id) => {
+            setPhotos(photos.filter((photo) => photo.id !== id));
+        });
     };
 
     const onAdd = async (title, url) => {
@@ -43,7 +70,7 @@ export default function App() {
     };
 
     const onEdit = async (id, title, url) => {
-        await fetch(api + {id}, {
+        await fetch(api + '/' + id, {
             method: "PUT",
             body: JSON.stringify({
                 title: title,
@@ -77,7 +104,7 @@ export default function App() {
     };
 
     const onDelete = async (id) => {
-        await fetch(api + {id}, {
+        await fetch(api + '/' + id, {
             method: "DELETE"
         })
             .then((response) => {
@@ -94,10 +121,11 @@ export default function App() {
             .catch((error) => console.log(error));
     };
 
+
     return (
         <div className="App">
             <h1>Photos</h1>
-            <AddPicture onAdd={onAdd}/>
+            <AddPicture onAdd={onAdd} />
             <div className="form_body">
                 {photos.map((photo) => (
                     <Picture
