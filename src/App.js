@@ -10,7 +10,12 @@ export default function App() {
     const socket = io("http://localhost:3001");
 
     useEffect(() => {
-        fetchData();
+        const localStoragePhotos = localStorage.getItem("photos");
+        if (localStoragePhotos) {
+            setPhotos(JSON.parse(localStoragePhotos));
+        } else {
+            fetchData();
+        }
         setupSocketListeners();
 
         return () => {
@@ -21,13 +26,20 @@ export default function App() {
     const fetchData = async () => {
         await fetch(api + "?_limit=10")
             .then((response) => response.json())
-            .then((data) => setPhotos(data))
+            .then((data) => {
+                setPhotos(data);
+                localStorage.setItem("photos", JSON.stringify(data));
+            })
             .catch((error) => console.log(error));
     };
 
     const setupSocketListeners = () => {
         socket.on("photoAdded", (newPhoto) => {
-            setPhotos((photos) => [...photos, newPhoto]);
+            setPhotos((photos) => {
+                const updatedPhotos = [...photos, newPhoto];
+                localStorage.setItem("photos", JSON.stringify(updatedPhotos));
+                return updatedPhotos;
+            });
         });
 
         socket.on("photoUpdated", (updatedPhoto) => {
@@ -38,10 +50,15 @@ export default function App() {
                 return photo;
             });
             setPhotos(updatedPhotos);
+            localStorage.setItem("photos", JSON.stringify(updatedPhotos));
         });
 
         socket.on("photoDeleted", (id) => {
-            setPhotos(photos.filter((photo) => photo.id !== id));
+            setPhotos((photos) => {
+                const updatedPhotos = photos.filter((photo) => photo.id !== id);
+                localStorage.setItem("photos", JSON.stringify(updatedPhotos));
+                return updatedPhotos;
+            });
         });
     };
 
@@ -88,7 +105,6 @@ export default function App() {
                 }
             })
             .then((data) => {
-                // setUsers((users) => [...users, data]);
                 const updatedPhotos = photos.map((photo) => {
                     if (photo.id === id) {
                         photo.title = title;
@@ -99,6 +115,7 @@ export default function App() {
                 });
 
                 setPhotos((photos) => updatedPhotos);
+                localStorage.setItem("photos", JSON.stringify(updatedPhotos));
             })
             .catch((error) => console.log(error));
     };
@@ -111,16 +128,15 @@ export default function App() {
                 if (response.status !== 200) {
                     return;
                 } else {
-                    setPhotos(
-                        photos.filter((photo) => {
-                            return photo.id !== id;
-                        })
-                    );
+                    setPhotos((photos) => {
+                        const updatedPhotos = photos.filter((photo) => photo.id !== id);
+                        localStorage.setItem("photos", JSON.stringify(updatedPhotos));
+                        return updatedPhotos;
+                    });
                 }
             })
             .catch((error) => console.log(error));
     };
-
 
     return (
         <div className="App">
@@ -141,3 +157,4 @@ export default function App() {
         </div>
     );
 }
+
