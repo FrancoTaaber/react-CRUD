@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { AddPicture } from "./components/AddPicture";
 import { Picture } from "./components/Home";
+import { Logs } from "./components/Logs";
+import { Login } from "./components/Login";
 import { io } from "socket.io-client";
+import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
+
 
 export default function App() {
     const [photos, setPhotos] = useState([]);
@@ -10,12 +14,7 @@ export default function App() {
     const socket = io("http://localhost:3001");
 
     useEffect(() => {
-        const localStoragePhotos = localStorage.getItem("photos");
-        if (localStoragePhotos) {
-            setPhotos(JSON.parse(localStoragePhotos));
-        } else {
-            fetchData();
-        }
+        fetchData();
         setupSocketListeners();
 
         return () => {
@@ -23,8 +22,15 @@ export default function App() {
         };
     }, []);
 
+
     const fetchData = async () => {
-        await fetch(api + "?_limit=10")
+        const token = localStorage.getItem("token");
+
+        await fetch(api + "?_limit=10", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
             .then((response) => response.json())
             .then((data) => {
                 setPhotos(data);
@@ -32,6 +38,7 @@ export default function App() {
             })
             .catch((error) => console.log(error));
     };
+
 
     const setupSocketListeners = () => {
         socket.on("photoAdded", (newPhoto) => {
@@ -63,15 +70,18 @@ export default function App() {
     };
 
     const onAdd = async (title, url) => {
-        await fetch( api, {
+        const token = localStorage.getItem("token");
+
+        await fetch(api, {
             method: "POST",
             body: JSON.stringify({
                 title: title,
                 url: url,
             }),
             headers: {
-                "Content-type": "application/json; charset=UTF-8"
-            }
+                "Content-type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${token}`,
+            },
         })
             .then((response) => {
                 if (response.status !== 201) {
@@ -87,6 +97,8 @@ export default function App() {
     };
 
     const onEdit = async (id, title, url) => {
+        const token = localStorage.getItem("token");
+
         await fetch(api + '/' + id, {
             method: "PUT",
             body: JSON.stringify({
@@ -94,7 +106,8 @@ export default function App() {
                 url: url,
             }),
             headers: {
-                "Content-type": "application/json; charset=UTF-8"
+                "Content-type": "application/json; charset=UTF-8",
+                Authorization: `Bearer ${token}`,
             }
         })
             .then((response) => {
@@ -121,8 +134,13 @@ export default function App() {
     };
 
     const onDelete = async (id) => {
+        const token = localStorage.getItem("token");
+
         await fetch(api + '/' + id, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
         })
             .then((response) => {
                 if (response.status !== 200) {
@@ -138,23 +156,55 @@ export default function App() {
             .catch((error) => console.log(error));
     };
 
+    const onLogin = async (email, password) => {
+        await fetch("http://localhost:3001/login", {
+            method: "POST",
+            body: JSON.stringify({ email, password }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8",
+            },
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                localStorage.setItem("token", data.token);
+
+            })
+            .catch((error) => console.log(error));
+    };
     return (
-        <div className="App">
-            <h1>Photos</h1>
-            <AddPicture onAdd={onAdd} />
-            <div className="form_body">
-                {photos.map((photo) => (
-                    <Picture
-                        id={photo.id}
-                        key={photo.id}
-                        title={photo.title}
-                        url={photo.url}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
+        <Router>
+            <div className="App">
+                <h1>Photos</h1>
+                <nav>
+                    <Link to="/">Home</Link>
+                    <Link to="/logs">Logid</Link>
+                    <Link to="/login">Log in</Link>
+                </nav>
+                <Routes>
+                    <Route
+                        path="/"
+                        element={
+                            <>
+                                <AddPicture onAdd={onAdd} />
+                                <div className="form_body">
+                                    {photos.map((photo) => (
+                                        <Picture
+                                            id={photo.id}
+                                            key={photo.id}
+                                            title={photo.title}
+                                            url={photo.url}
+                                            onEdit={onEdit}
+                                            onDelete={onDelete}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        }
                     />
-                ))}
+                    <Route path="/logs" element={<Logs />} />
+                    <Route path="/login" element={<Login onLogin={onLogin} />} />
+                </Routes>
             </div>
-        </div>
+        </Router>
     );
 }
-

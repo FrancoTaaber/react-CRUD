@@ -1,0 +1,22 @@
+.logs {
+    width: 100%;
+}
+
+.logs table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.logs th,
+.logs td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.logs th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background-color: #f2f2f2;
+    color: black;
+}
