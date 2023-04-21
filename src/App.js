@@ -112,7 +112,7 @@ export default function App() {
         })
             .then((response) => {
                 if (response.status !== 200) {
-                    return;
+                    throw new Error('Not authorized to update this photo');
                 } else {
                     return response.json();
                 }
@@ -130,8 +130,11 @@ export default function App() {
                 setPhotos((photos) => updatedPhotos);
                 localStorage.setItem("photos", JSON.stringify(updatedPhotos));
             })
-            .catch((error) => console.log(error));
+            .catch((error) => {
+                console.log(error);
+            });
     };
+
 
     const onDelete = async (id) => {
         const token = localStorage.getItem("token");
