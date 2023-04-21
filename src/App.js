@@ -34,9 +34,7 @@ export default function App() {
             .then((response) => response.json())
             .then((data) => {
                 setPhotos(data);
-                localStorage.setItem("photos", JSON.stringify(data));
-            })
-            .catch((error) => console.log(error));
+            });
     };
 
 
