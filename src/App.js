@@ -31,11 +31,20 @@ export default function App() {
                 Authorization: `Bearer ${token}`,
             },
         })
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then((data) => {
                 setPhotos(data);
+            })
+            .catch((error) => {
+                console.error("Error fetching data:", error);
             });
     };
+
 
 
     const setupSocketListeners = () => {
@@ -188,16 +197,23 @@ export default function App() {
                             <>
                                 <AddPicture onAdd={onAdd} />
                                 <div className="form_body">
-                                    {photos.map((photo) => (
-                                        <Picture
-                                            id={photo.id}
-                                            key={photo.id}
-                                            title={photo.title}
-                                            url={photo.url}
-                                            onEdit={onEdit}
-                                            onDelete={onDelete}
-                                        />
-                                    ))}
+                                    {photos.map((photo) => {
+                                        if (!photo.id) {
+                                            console.warn("Found a photo without an id", photo);
+                                            return null;
+                                        }
+
+                                        return (
+                                            <Picture
+                                                id={photo.id}
+                                                key={photo.id}
+                                                title={photo.title}
+                                                url={photo.url}
+                                                onEdit={onEdit}
+                                                onDelete={onDelete}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             </>
                         }
