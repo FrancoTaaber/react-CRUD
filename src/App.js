@@ -6,23 +6,27 @@ import { Login } from "./components/Login";
 import { io } from "socket.io-client";
 import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
 
-
+// The main App component
 export default function App() {
+    // State for storing the photos
     const [photos, setPhotos] = useState([]);
 
+    // API and socket.io configuration
     const api = "http://localhost:3001/photos";
     const socket = io("http://localhost:3001");
 
+    // Fetch initial data and set up socket listeners
     useEffect(() => {
         fetchData();
         setupSocketListeners();
 
+        // Clean up socket connection on unmount
         return () => {
             socket.disconnect();
         };
     }, []);
 
-
+    // Fetch photos from the server
     const fetchData = async () => {
         const token = localStorage.getItem("token");
 
@@ -46,7 +50,7 @@ export default function App() {
     };
 
 
-
+    // Set up socket.io event listeners
     const setupSocketListeners = () => {
         socket.on("photoAdded", (newPhoto) => {
             setPhotos((photos) => {
@@ -76,6 +80,7 @@ export default function App() {
         });
     };
 
+    // Function to handle adding a photo
     const onAdd = async (title, url) => {
         const token = localStorage.getItem("token");
 
@@ -103,6 +108,7 @@ export default function App() {
             .catch((error) => console.log(error));
     };
 
+    // Function to handle editing a photo
     const onEdit = async (id, title, url) => {
         const token = localStorage.getItem("token");
 
@@ -142,7 +148,7 @@ export default function App() {
             });
     };
 
-
+    // Function to handle deleting a photo
     const onDelete = async (id) => {
         const token = localStorage.getItem("token");
 
@@ -165,7 +171,7 @@ export default function App() {
             })
             .catch((error) => console.log(error));
     };
-
+    // Function to handle logging in
     const onLogin = async (email, password) => {
         await fetch("http://localhost:3001/login", {
             method: "POST",
@@ -181,6 +187,8 @@ export default function App() {
             })
             .catch((error) => console.log(error));
     };
+
+    // Render the application with routes
     return (
         <Router>
             <div className="App">
