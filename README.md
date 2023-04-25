@@ -8,7 +8,7 @@ To install the application, follow these steps:
 
 1. Clone the repository to your local machine.
 2. Navigate to the project's root directory in the terminal.
-3. Run ### `npm install` to install the necessary dependencies.
+3. Run `npm install` to install the necessary dependencies.
 
 ## Usage
 
