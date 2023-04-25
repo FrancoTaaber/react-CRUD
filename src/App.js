@@ -173,7 +173,7 @@ export default function App() {
     };
     // Function to handle logging in
     const onLogin = async (email, password) => {
-        await fetch("http://localhost:3001/login", {
+        await fetch("http://localhost:3001/tokens", {
             method: "POST",
             body: JSON.stringify({ email, password }),
             headers: {
@@ -196,7 +196,7 @@ export default function App() {
                 <nav>
                     <Link to="/">Home</Link>
                     <Link to="/logs">Logid</Link>
-                    <Link to="/login">Log in</Link>
+                    <Link to="/tokens">Log in</Link>
                 </nav>
                 <Routes>
                     <Route
@@ -227,7 +227,7 @@ export default function App() {
                         }
                     />
                     <Route path="/logs" element={<Logs />} />
-                    <Route path="/login" element={<Login onLogin={onLogin} />} />
+                    <Route path="/tokens" element={<Login onLogin={onLogin} />} />
                 </Routes>
             </div>
         </Router>
